@@ -11,45 +11,49 @@ roleBoard.controller('BoardCtrl', function ($scope, socket) {
   $scope.players = [];
   $scope.messages = [];
 
-  socket.on('init', function (data) {
-    console.log("init");
-    console.log(data);
-  });
-
-  socket.on('news', function (data) {
-    console.log("news");
-    console.log(data);
-    socket.emit('my other event', { my: 'data' });
-  });
-
-  socket.on('user:join', function (data) {
-    console.log("user:join");
+  socket.on('player:join', function (data) {
+    console.log("player:join");
     console.log(data);
     
     $scope.messages.push({
       user: 'chatroom',
       text: 'User ' + data.name + ' has joined.'
     });
-    $scope.users.push(data.name);
+    $scope.players.push({name: data.name, level:data.level, race:data.race, class:data.class});
   });
 
-  socket.on('user:left', function (data) {
-    console.log("user:left");
+  socket.on('player:left', function (data) {
+    console.log("player:left");
     console.log(data);
 
     $scope.messages.push({
       user: 'chatroom',
       text: 'User ' + data.name + ' has left.'
     });
-    var i, user;
-    for (i = 0; i < $scope.users.length; i++) {
-      user = $scope.users[i];
-      if (user === data.name) {
-        $scope.users.splice(i, 1);
+
+    for (var i = 0; i < $scope.players.length; i++) {
+      user = $scope.players[i];
+      if (user.name === data.name) {
+        $scope.players.splice(i, 1);
         break;
       }
     }
   });
+
+  socket.on('roll', function (data) {
+    console.log("roll");
+    console.log(data);
+
+    $scope.messages.push({
+      user: data.player,
+      text: data.player + " Tiro un dado y consiguio " + data.roll + "/" + data.faces
+    });
+  });
+
+  $scope.rollDice = function() {
+    console.log("Requesting a dice roll to the server...");
+    socket.emit('roll', {faces: 20});
+  };
 });
 
 roleBoard.factory('socket', function ($rootScope) {
@@ -81,14 +85,26 @@ roleBoard.factory('socket', function ($rootScope) {
 </head>
 <body ng-controller="BoardCtrl">
     <h1>D&amp;D</h1>
+
+    <button ng-click="rollDice()">Tirar Dado</button>
+
     <div id="players">
         <h3>Players: {{players.length}}</h3>
         <ul>
-            <li ng-repeat="player in players">
-                <span>{{player.name}}</span>
-                <span>({{player.race}} / {{player.class}})</span>
-            </li>
+          <li ng-repeat="player in players">
+            <span>{{player.name}}</span>
+            <span>({{player.race}} / {{player.class}})</span>
+          </li>
         </ul>
+    </div>
+
+    <div id="messages">
+      <ul>
+        <li ng-repeat="message in messages">
+          <span>{{message.timestamp}}</span>
+          <span>{{message.text}}</span>
+        </li>
+      </ul>
     </div>
 </body>
 </html>

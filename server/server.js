@@ -38,16 +38,21 @@ function httpHandler (request, response) {
 }
 
 io.on('connection', function (socket) {
-  console.log("Someone connected");
+  console.log("Someone connected ("+socket.id+") from " + socket.client.conn.remoteAddress);
 
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log(data);
-  });
+  // Let everyone know someone joined.
+  io.emit('player:join', {player: socket.id, name: socket.id});
 
   socket.on('disconnect', function () {
     console.log("Someone disconnected");
 
-    socket.emit('player:left', {name: "TODO"});
+    io.emit('player:left', {player: socket.id});
+  });
+
+  socket.on('roll', function (data) {
+    var roll = Math.round(Math.random() * data.faces);
+
+    console.log(socket.id + " rolled " + roll + "/" + data.faces);
+    io.emit('roll', {player: socket.id, roll: roll, faces: data.faces});
   });
 });
