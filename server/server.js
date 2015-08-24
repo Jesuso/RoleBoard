@@ -37,16 +37,26 @@ function httpHandler (request, response) {
   });
 }
 
+var players = [];
+
 io.on('connection', function (socket) {
-  console.log("Someone connected ("+socket.id+") from " + socket.client.conn.remoteAddress);
+  console.log("Player connected ("+socket.id+") from " + socket.client.conn.remoteAddress);
+
+  // Load this player's data and add it to the players array.
+  var player = {id: socket.id, name: socket.id, level: 0, race: "r", class: "c"};
+  addPlayer(player);
+
+  // Tell the player who is currently online.
+  socket.emit('players:online', {players: players});
 
   // Let everyone know someone joined.
-  io.emit('player:join', {player: socket.id, name: socket.id});
+  io.emit('player:join', {player: player});
 
   socket.on('disconnect', function () {
-    console.log("Someone disconnected");
+    removePlayer(player);
+    console.log("Player disconnected from " + socket.client.conn.remoteAddress);
 
-    io.emit('player:left', {player: socket.id});
+    io.emit('player:left', {player: {id: socket.id}});
   });
 
   socket.on('roll', function (data) {
@@ -56,3 +66,17 @@ io.on('connection', function (socket) {
     io.emit('roll', {player: socket.id, roll: roll, faces: data.faces});
   });
 });
+
+function addPlayer(player) {
+  players.push(player);
+}
+
+function removePlayer(player) {
+  var p;
+  for (var i = 0; i < players.length; i++) {
+    p = players[i];
+    if (p.id === player.id) {
+      players.splice(i--, 1);
+    }
+  }
+}
