@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html ng-app="RoleBoard">
+<head>
+<title>Title of the document</title>
+<script src="/node_modules/angular/angular.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+var roleBoard = angular.module('RoleBoard', []);
+
+roleBoard.controller('BoardCtrl', function ($scope, socket) {
+  $scope.players = [];
+  $scope.messages = [];
+
+  socket.on('init', function (data) {
+    console.log("init");
+    console.log(data);
+  });
+
+  socket.on('news', function (data) {
+    console.log("news");
+    console.log(data);
+    socket.emit('my other event', { my: 'data' });
+  });
+
+  socket.on('user:join', function (data) {
+    console.log("user:join");
+    console.log(data);
+    
+    $scope.messages.push({
+      user: 'chatroom',
+      text: 'User ' + data.name + ' has joined.'
+    });
+    $scope.users.push(data.name);
+  });
+
+  socket.on('user:left', function (data) {
+    console.log("user:left");
+    console.log(data);
+
+    $scope.messages.push({
+      user: 'chatroom',
+      text: 'User ' + data.name + ' has left.'
+    });
+    var i, user;
+    for (i = 0; i < $scope.users.length; i++) {
+      user = $scope.users[i];
+      if (user === data.name) {
+        $scope.users.splice(i, 1);
+        break;
+      }
+    }
+  });
+});
+
+roleBoard.factory('socket', function ($rootScope) {
+  console.log("Connecting to the server...");
+
+  var socket = io.connect();
+  return {
+    on: function (eventName, callback) {
+      socket.on(eventName, function () {
+        var args = arguments;
+        $rootScope.$apply(function () {
+          callback.apply(socket, args);
+        });
+      });
+    },
+    emit: function (eventName, data, callback) {
+      socket.emit(eventName, data, function () {
+        var args = arguments;
+        $rootScope.$apply(function () {
+          if (callback) {
+            callback.apply(socket, args);
+          }
+        });
+      })
+    }
+  };
+});
+</script>
+</head>
+<body ng-controller="BoardCtrl">
+    <h1>D&amp;D</h1>
+    <div id="players">
+        <h3>Players: {{players.length}}</h3>
+        <ul>
+            <li ng-repeat="player in players">
+                <span>{{player.name}}</span>
+                <span>({{player.race}} / {{player.class}})</span>
+            </li>
+        </ul>
+    </div>
+</body>
+</html>
