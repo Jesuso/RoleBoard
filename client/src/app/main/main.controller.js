@@ -6,8 +6,7 @@
     .controller('MainController', MainController);
 
   /** @ngInject */
-  function MainController($timeout, webDevTec, toastr) {
-    console.log(toastr);
+  function MainController($scope, $timeout, webDevTec, toastr, socket) {
     var vm = this;
 
     vm.awesomeThings = [];

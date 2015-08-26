@@ -1,0 +1,9 @@
+<div id="players">
+  <h3>Players: {{players.length}}</h3>
+  <ul>
+    <li ng-repeat="player in players">
+      <span>{{player.name}}</span>
+      <span>({{player.race}} / {{player.class}})</span>
+    </li>
+  </ul>
+</div>
