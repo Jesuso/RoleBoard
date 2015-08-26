@@ -2,8 +2,9 @@
 <html ng-app="RoleBoard">
 <head>
 <title>Title of the document</title>
-<script src="/node_modules/angular/angular.js"></script>
+<script src="/bower_components/angular/angular.js"></script>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/js/dice.js"></script>
 <script>
 var roleBoard = angular.module('RoleBoard', []);
 
@@ -127,6 +128,11 @@ roleBoard.factory('socket', function ($rootScope) {
     }
   };
 });
+
+angular.element(document).ready(function() {
+  console.log("Ready");
+  dice_initialize(document.body, window.innerWidth - 1, window.innerHeight - 1);
+})
 </script>
 </head>
 <body ng-controller="BoardCtrl">
